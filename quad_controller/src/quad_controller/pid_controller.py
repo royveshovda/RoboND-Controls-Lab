@@ -1,14 +1,8 @@
-# Copyright (C) 2017 Electric Movement Inc.
-# All Rights Reserved.
-
-# Author: Brandon Kinman
-
-
 class PIDController:
     def __init__(self, kp = 0.0, ki = 0.0, kd = 0.0, max_windup = 10,
-                start_time = 0, alpha = 1.,
-                u_bounds = [float('-inf'), float('inf')]):
-         # The PID controller can be initalized with a specific kp value
+            start_time = 0, alpha = 0.1,
+            u_bounds = [float('-inf'), float('inf')]):
+        # The PID controller can be initalized with a specific kp value
         # ki value, and kd value
         self.kp_ = float(kp)
         self.ki_ = float(ki)
@@ -78,9 +72,6 @@ class PIDController:
         # Sum the errors
         self.error_sum_ += error * delta_time
 
-        # Update the past error
-        self.last_error_ = error
-
         # Find delta_error
         delta_error = error - self.last_error_
 
@@ -88,10 +79,12 @@ class PIDController:
         self.last_error_ = error
 
         # Address max windup
+        ########################################
         if self.error_sum_ > self.max_windup_:
             self.error_sum_ = self.max_windup_
         elif self.error_sum_ < -self.max_windup_:
             self.error_sum_ = -self.max_windup_
+        ########################################
 
         # Proportional error
         p = self.kp_ * error
@@ -101,16 +94,20 @@ class PIDController:
 
         # Recalculate the derivative error here incorporating
         # derivative smoothing!
+        ########################################
         d = self.kd_ * (self.alpha * delta_error / delta_time + (1 - self.alpha))
+        ########################################
 
         # Set the control effort
         u = p + i + d
 
         # Enforce actuator saturation limits
+        ########################################
         if u > self.umax:
             u = self.umax
         elif u < self.umin:
             u = self.umin
+        ########################################
 
         # Here we are storing the control effort history for post control
         # observations.
